@@ -64,7 +64,7 @@ dcl-proc main;
         if not %eof(EVFEVENT);
             if #add = 'N' and %subst(e_evfevent:1:5) = 'ERROR';
                 #add = 'S';
-            endif;
+            endif; 
             if #add = 'S';
                 #z += 1;
                 #data(#z).#evfevent = e_evfevent;
