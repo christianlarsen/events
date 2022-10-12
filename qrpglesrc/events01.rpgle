@@ -78,9 +78,9 @@ dcl-proc main;
     e_evfevent = buffer;
     write revfevent;
     for #z = 1 to %elem(#data);
-        if %subst(#data(#z).#evfevent:49:7) = 'CPC5D07';
-           iter;
-        endif;
+        //if %subst(#data(#z).#evfevent:49:7) = 'CPC5D07';
+        //   iter;
+        //endif;
         e_evfevent = #data(#z).#evfevent;
         write revfevent;
     endfor;
@@ -89,6 +89,9 @@ dcl-proc main;
 
     #error = '1';
 
+    if #error = '1';
+    // Sending message "RNS9310" (compilation error)
+    // (I need VSCode read that error)
     snd-msg *escape %msg('RNS9310' : 'QDEVTOOLS/QRPGLEMSG' : #program) %target(*caller:2);
-
+    endif;
 end-proc;
