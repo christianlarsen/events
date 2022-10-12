@@ -28,11 +28,11 @@ dcl-ds *n;
     space5 char(1);
     number6 char(3) inz('001');             // Col.
     space6 char(1);
-    number7 char(6) inz('000001');          // Lín.
+    number7 char(6) inz('000001');          // Lin.
     space7 char(1);
     number8 char(3) inz('000');
     space8 char(1);
-    messageid char(7) inz('AS40001');
+    messageid char(7) inz('AS40001');       // My own message error
     space9 char(1);
     info char(1) inz('T');                 // I=  S=  T= ??
     detail char(25) inz(' 30 001 This is TEST!!');
@@ -56,9 +56,10 @@ dcl-proc main;
     %elem(#data) = 0;
     #z = 0;
     #add = 'N';
+
     open EVFEVENT;
-    // Busco FILEEND e inserto delante lo que quiero
-    // Cargo la estructura con los datos que hay en EVFEVENT
+    // I search FILEEND and I insert before it what I want
+    // I'm loading the structure with the information I'm reading from EVFEVENT
     dou %eof(EVFEVENT);
         read revfevent;
         if not %eof(EVFEVENT);
@@ -75,8 +76,10 @@ dcl-proc main;
     close EVFEVENT;
 
     open EVFEVENT;
+    // I add my own messages (???)
     e_evfevent = buffer;
     write revfevent;
+    // And after them, I add the rest of EVFEVENT as I read it before.
     for #z = 1 to %elem(#data);
         //if %subst(#data(#z).#evfevent:49:7) = 'CPC5D07';
         //   iter;
@@ -84,9 +87,9 @@ dcl-proc main;
         e_evfevent = #data(#z).#evfevent;
         write revfevent;
     endfor;
-
     close EVFEVENT;
 
+    // If there was some error, I should return error = '1'
     #error = '1';
 
     if #error = '1';
