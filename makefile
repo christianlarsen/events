@@ -3,7 +3,7 @@ BIN_LIB=CMPSYS
 LIBLIST=$(BIN_LIB) CLV1
 SHELL=/QOpenSys/usr/bin/qsh
 
-all: eve_code.sql events.rpgle clevents.clle
+all: events.rpgle clevents.clle
 
 %.rpgle:
 	system -s "CHGATR OBJ('/home/CLV/events/qrpglesrc/$*.rpgle') ATR(*CCSID) VALUE(1252)"
