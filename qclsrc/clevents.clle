@@ -1,0 +1,29 @@
+             PGM        PARM(&LIBRARY &PROGRAM &COMMAND)
+
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMMAND) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*LGL)
+
+             DCLPRCOPT  DFTACTGRP(*NO) ACTGRP(*CALLER)
+
+             CRTBNDRPG  PGM(&LIBRARY/&PROGRAM) +
+                          SRCFILE(&LIBRARY/QRPGLESRC) +
+                          SRCMBR(&PROGRAM) OPTION(*EVENTF *NOGEN) +
+                          TGTRLS(*CURRENT)
+             MONMSG     MSGID(CPF0000)
+
+             CALL       PGM(CLV1/EVENTS) PARM((&LIBRARY) +
+                          (&PROGRAM) (&ERROR))
+             MONMSG     MSGID(CPF0000)
+
+             IF         COND(&ERROR *EQ '1') THEN(DO)
+             CRTBNDRPG  PGM(&LIBRARY/&PROGRAM) +
+                          SRCFILE(&LIBRARY/QRPGLESRC) +
+                          SRCMBR(&PROGRAM) OPTION(*EVENTF) +
+                          TGTRLS(*CURRENT)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+
+             ENDPGM
