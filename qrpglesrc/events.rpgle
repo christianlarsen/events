@@ -25,14 +25,17 @@ dcl-f eve_code usage(*input)
 dcl-s #evfevent char(21);
 dcl-s #mbr char(10);
 
+// Structure for warnings found
 dcl-ds #warnings qualified;
     number zoned(6) inz;
     isfree char(1) inz;
     freeline zoned(6) inz;
     ctloptfirstline zoned(6) inz;
     ctloptendline zoned(6) inz;
+    inlr char(1) inz;
 end-ds;
 
+// Structure for errors found
 dcl-ds #errors qualified;
     number zoned(6) inz;
     dftactgrp char(1) inz;
@@ -131,6 +134,10 @@ dcl-proc main;
             // CTL-OPT warning
             if #warnings.ctloptfirstline <= 0;
                 addError(3);
+            endif;
+            // *INLR warning
+            if #warnings.inlr <> 'Y';
+                addError(6);
             endif;
             
         endif;
@@ -243,6 +250,11 @@ dcl-proc checksource;
                     #errors.actgrp = 'Y';
                 endif;
             endif;
+
+            // Checks for INLR.
+            if %scan('*INLR':%upper(s_srcdta)) > 0;
+                #warnings.inlr = 'Y';
+            endif;
         endif;
     enddo;
     if #errors.dftactgrp <> 'Y';
@@ -250,6 +262,9 @@ dcl-proc checksource;
     endif;
     if #errors.actgrp <> 'Y';
        #errors.number += 1;
+    endif;
+    if #warnings.inlr <> 'Y';
+       #warnings.number += 1;
     endif;
 
     close SOURCE;

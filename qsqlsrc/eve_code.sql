@@ -22,3 +22,4 @@ insert into eve_code values (2 , '00', '001', 'This is NOT a FREE source');
 insert into eve_code values (3 , '00', '001', 'CTL-OPT missing.');
 insert into eve_code values (4 , '30', '001', 'DFTACTGRP(*NO) missing.');
 insert into eve_code values (5 , '30', '001', 'ACTGRP missing.');
+insert into eve_code values (6 , '00', '001', '*INLR indicator missing.');
