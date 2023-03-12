@@ -177,6 +177,9 @@ dcl-proc main;
 
 end-proc;
 
+//
+// addError procedure.  Adds error/warning to EVFEVENT
+//
 dcl-proc addError;
     dcl-pi *n;
         number zoned(4) const;
@@ -191,6 +194,10 @@ dcl-proc addError;
 
 end-proc;
 
+//
+// checksource procedure.  
+// Checks source of the RPGLE program and finds the possible errors/warnings.
+//
 dcl-proc checksource;
 
     dcl-s #startline zoned(5) inz;
