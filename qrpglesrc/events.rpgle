@@ -32,6 +32,7 @@ dcl-ds #warnings qualified;
     freeline zoned(6) inz;
     ctloptfirstline zoned(6) inz;
     ctloptendline zoned(6) inz;
+    nodebugio char(1) inz;
     inlr char(1) inz;
 end-ds;
 
@@ -134,6 +135,10 @@ dcl-proc main;
             // CTL-OPT warning
             if #warnings.ctloptfirstline <= 0;
                 addError(3);
+            endif;
+            // *NODEBUGIO warning
+            if #warnings.nodebugio <> 'Y';
+                addError(7);
             endif;
             // *INLR warning
             if #warnings.inlr <> 'Y';
@@ -251,6 +256,10 @@ dcl-proc checksource;
                 if 'ACTGRP' in #list;
                     #errors.actgrp = 'Y';
                 endif;
+                // Looks for NODEBUGIO
+                if '*NODEBUGIO' in #list;
+                    #warnings.nodebugio = 'Y';
+                endif;
             endif;
 
             // Looks for *INLR.
@@ -264,6 +273,9 @@ dcl-proc checksource;
     endif;
     if #errors.actgrp <> 'Y';
        #errors.number += 1;
+    endif;
+    if #warnings.nodebugio <> 'Y';
+       #warnings.number += 1;
     endif;
     if #warnings.inlr <> 'Y';
        #warnings.number += 1;
