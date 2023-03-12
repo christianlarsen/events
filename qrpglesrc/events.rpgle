@@ -1,5 +1,5 @@
 **free
-ctl-opt main(main) dftactgrp(*no) actgrp(*caller)
+ctl-opt main(events) dftactgrp(*no) actgrp(*caller)
 copyright('EVENTS, (c)2023, Christian Larsen');
 
 dcl-f source usage(*input)
@@ -80,9 +80,9 @@ end-ds;
 //
 // Main procedure
 //
-dcl-proc main;
+dcl-proc events;
 
-    dcl-pi *n;
+    dcl-pi events;
         #library char(10) const;
         #program char(10) const;
         #error ind;
