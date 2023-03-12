@@ -202,6 +202,8 @@ dcl-proc checksource;
     dcl-s #startline zoned(5) inz;
     dcl-s #lines zoned(5) inz;
     dcl-s #pos zoned(5) inz;
+    dcl-s #pos2 zoned(5) inz;
+    dcl-s #list char(50) dim(*auto:30);
 
     open SOURCE;
 
@@ -221,14 +223,14 @@ dcl-proc checksource;
                 iter;
             endif;
 
-            // Checks for **FREE line.
+            // Looks for **FREE.
             if %upper(s_srcdta) = '**FREE';
                 #warnings.isfree = 'Y';
                 #warnings.number += 1;
                 #warnings.freeline = #lines;
             endif;
 
-            // Checks for CTL-OPT line.
+            // Looks for CTL-OPT.
             if %upper(%subst(s_srcdta:1:7)) = 'CTL-OPT';
                 #warnings.ctloptfirstline = #lines;
             endif;
@@ -240,18 +242,18 @@ dcl-proc checksource;
             if #lines >= #warnings.ctloptfirstline and
                 ((#warnings.ctloptendline > 0 and #lines <= #warnings.ctloptendline) or
                 (#warnings.ctloptendline = 0));
-                // Looks for dftactgrp(*no), must be there
-                if %scan('DFTACTGRP(*NO)':%upper(s_srcdta)) > 0;
+                #list = %split(%upper(s_srcdta):' ()');
+                // Looks for DFTACTGRP
+                if 'DFTACTGRP' in #list;
                     #errors.dftactgrp = 'Y';
                 endif;
-                #pos = %scan('ACTGRP(':%upper(s_srcdta));
-                if (#pos > 1 and %subst(%upper(s_srcdta):#pos-1:1) <> 'T') or
-                    #pos = 1;
+                // Looks for ACTGRP
+                if 'ACTGRP' in #list;
                     #errors.actgrp = 'Y';
                 endif;
             endif;
 
-            // Checks for INLR.
+            // Looks for *INLR.
             if %scan('*INLR':%upper(s_srcdta)) > 0;
                 #warnings.inlr = 'Y';
             endif;
