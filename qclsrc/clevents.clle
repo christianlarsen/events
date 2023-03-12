@@ -5,7 +5,7 @@
              DCL        VAR(&COMMAND) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERROR) TYPE(*LGL)
 
-             DCLPRCOPT  DFTACTGRP(*NO) ACTGRP(*CALLER)
+             DCLPRCOPT  DFTACTGRP(*NO) ACTGRP(*NEW)
 
              CRTBNDRPG  PGM(&LIBRARY/&PROGRAM) +
                           SRCFILE(&LIBRARY/QRPGLESRC) +

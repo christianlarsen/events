@@ -1,25 +1,29 @@
 **free
-ctl-opt main(main) dftactgrp(*no) actgrp(*caller);
+ctl-opt main(main) dftactgrp(*no) actgrp(*caller)
+copyright('EVENTS, (c)2023, Christian Larsen');
 
 dcl-f source usage(*input)
-    extdesc('CLV1/QRPGLESRC')
+    extdesc('QRPGLESRC')
     extfile(*extdesc)
     extmbr(#mbr)
     prefix(s_)
     usropn;
 
 dcl-f evfevent usage(*input:*output:*update:*delete)
-    extdesc('CLV1/EVFEVENT')
+    extdesc('EVFEVENT')
     extfile(#evfevent)
     extmbr(#mbr)
     rename(evfevent:revfevent)
     prefix(e_)
     usropn;
 
+dcl-f eve_code usage(*input)
+    extdesc('EVE_CODE')
+    extfile(*extdesc)
+    keyed prefix(cod_);
+
 dcl-s #evfevent char(21);
 dcl-s #mbr char(10);
-dcl-s #z zoned(3);
-dcl-s #add char(1);
 
 dcl-ds #warnings qualified;
     number zoned(6) inz;
@@ -27,12 +31,12 @@ dcl-ds #warnings qualified;
     freeline zoned(6) inz;
     ctloptfirstline zoned(6) inz;
     ctloptendline zoned(6) inz;
-    dftactgrp char(1) inz;
-    actgrp char(1) inz;
 end-ds;
 
 dcl-ds #errors qualified;
     number zoned(6) inz;
+    dftactgrp char(1) inz;
+    actgrp char(1) inz;
 end-ds;
 
 dcl-ds #line qualified;
@@ -63,17 +67,13 @@ dcl-ds #line qualified;
     buffer char(400) pos(1);
 end-ds;
 
-dcl-ds #details dim(*auto:1000) qualified;
-    error char(2) inz;
-    line char(3) inz;
-    text char(50) inz;
-end-ds;
-
 dcl-ds #data dim(*auto:1000) qualified;
     #evfevent char(400);
 end-ds;
 
+//
 // Main procedure
+//
 dcl-proc main;
 
     dcl-pi *n;
@@ -81,23 +81,8 @@ dcl-proc main;
         #program char(10) const;
         #error ind;
     end-pi;
-
-    // Possible errors added to structure
-    #details(1).error = '00';
-    #details(1).line = '001';
-    #details(1).text = 'This is a FREE source';
-    #details(2).error = '00';
-    #details(2).line = '001';
-    #details(2).text = 'This is NOT a FREE source';
-    #details(3).error = '00';
-    #details(3).line = '001';
-    #details(3).text = 'CTL-OPT line must be written';
-    #details(4).error = '00';
-    #details(4).line = '001';
-    #details(4).text = 'DFTACTGRP(*NO) must be written';
-    #details(5).error = '00';
-    #details(5).line = '001';
-    #details(5).text = 'ACTGRP must be indicated';
+    dcl-s #z zoned(3);
+    dcl-s #add char(10);
 
     // The EVFEVENT file
     #evfevent = %trim(#library) + '/EVFEVENT';
@@ -147,10 +132,15 @@ dcl-proc main;
             if #warnings.ctloptfirstline <= 0;
                 addError(3);
             endif;
-            if #warnings.dftactgrp <> 'Y';
+            
+        endif;
+
+        // Let's add the errors
+        if #errors.number > 0;
+            if #errors.dftactgrp <> 'Y';
                 addError(4);
             endif;
-            if #warnings.actgrp <> 'Y';
+            if #errors.actgrp <> 'Y';
                 addError(5);
             endif;
 
@@ -178,19 +168,21 @@ dcl-proc main;
 end-proc;
 
 //
-// addError procedure.  Adds error/warning to EVFEVENT
+// addError procedure. 
+// Adds error/warning to EVFEVENT 
 //
 dcl-proc addError;
     dcl-pi *n;
-        number zoned(4) const;
+        #number zoned(5) const;
     end-pi;
 
-    #line.errorcode = #details(number).error;
-    #line.detail = #details(number).line + ' ' +
-    #details(number).text;
-
-    e_evfevent = #line.buffer;
-    write revfevent;
+    chain #number revecode;
+    if %found;
+        #line.errorcode = cod_errorid;
+        #line.detail = cod_lineid + ' ' + cod_text;
+        e_evfevent = #line.buffer;
+        write revfevent;
+    endif;
 
 end-proc;
 
@@ -202,7 +194,7 @@ dcl-proc checksource;
 
     dcl-s #startline zoned(5) inz;
     dcl-s #lines zoned(5) inz;
-    dcl-s pos zoned(5) inz;
+    dcl-s #pos zoned(5) inz;
 
     open SOURCE;
 
@@ -243,17 +235,22 @@ dcl-proc checksource;
                 (#warnings.ctloptendline = 0));
                 // Looks for dftactgrp(*no), must be there
                 if %scan('DFTACTGRP(*NO)':%upper(s_srcdta)) > 0;
-                    #warnings.dftactgrp = 'Y';
+                    #errors.dftactgrp = 'Y';
                 endif;
-                pos = %scan('ACTGRP(':%upper(s_srcdta));
-                if (pos > 1 and %subst(%upper(s_srcdta):pos-1:1) <> 'T') or
-                    pos = 1;
-                    #warnings.actgrp = 'Y';
+                #pos = %scan('ACTGRP(':%upper(s_srcdta));
+                if (#pos > 1 and %subst(%upper(s_srcdta):#pos-1:1) <> 'T') or
+                    #pos = 1;
+                    #errors.actgrp = 'Y';
                 endif;
-
             endif;
         endif;
     enddo;
+    if #errors.dftactgrp <> 'Y';
+       #errors.number += 1;
+    endif;
+    if #errors.actgrp <> 'Y';
+       #errors.number += 1;
+    endif;
 
     close SOURCE;
 
