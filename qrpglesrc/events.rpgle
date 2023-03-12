@@ -43,6 +43,7 @@ dcl-ds #errors qualified;
     actgrp char(1) inz;
 end-ds;
 
+// Structure of EVFEVENT file
 dcl-ds #line qualified;
     event char(11) inz('ERROR');            // Error information record
     number1 char(1) inz(*zeros);            // Version
@@ -71,7 +72,8 @@ dcl-ds #line qualified;
     buffer char(400) pos(1);
 end-ds;
 
-dcl-ds #data dim(*auto:1000) qualified;
+// Structure for saving information from EVFEVENT file
+dcl-ds #data dim(*auto:10000) qualified;
     #evfevent char(400);
 end-ds;
 
@@ -115,15 +117,16 @@ dcl-proc main;
     enddo;
     close EVFEVENT;
 
-    checksource();
+    // Check source of RPGLE program for defined warnings/errors.
+    checkSource();
 
-    // If there are warnings of errors
+    // If there are warnings of errors, I will add information to EVFEVENT.
     if #warnings.number > 0 or
        #errors.number > 0;
 
         open EVFEVENT;
 
-        // Let's add the warnings
+        // - Warnings
         if #warnings.number > 0;
 
             // **FREE warning
@@ -144,10 +147,9 @@ dcl-proc main;
             if #warnings.inlr <> 'Y';
                 addError(6);
             endif;
-            
         endif;
 
-        // Let's add the errors
+        // - Errors
         if #errors.number > 0;
             if #errors.dftactgrp <> 'Y';
                 addError(4);
@@ -155,7 +157,6 @@ dcl-proc main;
             if #errors.actgrp <> 'Y';
                 addError(5);
             endif;
-
         endif;
 
         for #z = 1 to %elem(#data);
@@ -168,6 +169,7 @@ dcl-proc main;
 
         close EVFEVENT;
 
+        // If some error was found, then I will send an *ESCAPE msg to stop the compilation.
         if #errors.number > 0;
             snd-msg *escape %msg('RNS9310' : 'QDEVTOOLS/QRPGLEMSG' : #program)
             %target(*caller:2);
@@ -180,29 +182,10 @@ dcl-proc main;
 end-proc;
 
 //
-// addError procedure. 
-// Adds error/warning to EVFEVENT 
-//
-dcl-proc addError;
-    dcl-pi *n;
-        #number zoned(5) const;
-    end-pi;
-
-    chain #number revecode;
-    if %found;
-        #line.errorcode = cod_errorid;
-        #line.detail = cod_lineid + ' ' + cod_text;
-        e_evfevent = #line.buffer;
-        write revfevent;
-    endif;
-
-end-proc;
-
-//
-// checksource procedure.  
+// checkSource procedure.  
 // Checks source of the RPGLE program and finds the possible errors/warnings.
 //
-dcl-proc checksource;
+dcl-proc checkSource;
 
     dcl-s #startline zoned(5) inz;
     dcl-s #lines zoned(5) inz;
@@ -282,5 +265,24 @@ dcl-proc checksource;
     endif;
 
     close SOURCE;
+
+end-proc;
+
+//
+// addError procedure. 
+// Adds error/warning to EVFEVENT 
+//
+dcl-proc addError;
+    dcl-pi *n;
+        #number zoned(5) const;
+    end-pi;
+
+    chain #number revecode;
+    if %found;
+        #line.errorcode = cod_errorid;
+        #line.detail = cod_lineid + ' ' + cod_text;
+        e_evfevent = #line.buffer;
+        write revfevent;
+    endif;
 
 end-proc;
